@@ -19,59 +19,66 @@ class Classifier {
 
     public:
     void train(csvstream &training_file);
-
     string predict(string &content);
+    set<string> unique_words(const string &str) {
+      istringstream source(str);
+      set<string> words;
+      string word;
+      while (source >> word) {
+        words.insert(word);
+      }
+      return words;
+    } 
 };
 
+double log_prior(int label_count, int total_count) {
+  return log(static_cast<double>(label_count) / static_cast<double>(total_count));
+}
 void Classifier::train(csvstream &training_file) {
   map <string, string> row;
 
   cout << "training data:" << endl;
   vector<string> ignore = training_file.getheader();
   while(training_file >> row) {
-    int n = stoi(row["n"]);
-    int unique_views = stoi(row["unique_views"]);
-    string tag = row["tag"];
+    train_num += 1;
+    string label = row["tag"];
     string content = row["content"];
-    cout << "label = " << tag << ", content = " << content << endl;
+    cout << "  label = " << label << ", content = " << content << endl;
+    label_count[label] += 1;
 
-    ++train_num;
-    ++label_count[tag];
-    for(const string &word : unique_words(content)) {
-      ++vocab_size;
-      ++word_count[word];
-      ++word_label_count[tag][word];
+    set<string> words = unique_words(content);
+  
+    for (const string &word : words) {
       vocab.insert(word);
+      word_count[word] += 1;
+      word_label_count[word][label] += 1;
     }
+
+    vocab_size = vocab.size();
   }
 
   cout << "trained on " << train_num << " examples" << endl;
   cout << "vocabulary size = " << vocab_size << endl;
   cout << endl;
 
-
-}
-
-double calculate_log_prior(int label_count, int train_num) {
-  double log_prior = std::log(label_count / train_num);
-  return log_prior;
-
-}
-
-double calculate_log_likelihood(int label_count, int word_count, 
-                                int word_label_count, int train_num) {
-
-}
-
-set<string> unique_words(const string &str) {
-  istringstream source(str);
-  set<string> words;
-  string word;
-  while (source >> word) {
-    words.insert(word);
+  cout << "classes:" << endl;
+    for (auto &label_pair : label_count) {
+      cout << "  " << label_pair.first << ", " << label_pair.second << " examples, "
+      << "log-prior = " << log_prior(label_pair.second, train_num) << endl;
+    }
+  
+  cout << "classifier parameters:" << endl;
+  for (auto &label : label_count) {
+    for (auto &word : vocab) {
+      int count_wl = word_label_count[word][label.first];
+      if (count_wl > 0)
+      cout <<  "  " << label.first << ":" << word << ", count = " << count_wl 
+      << ", log-likelihood = " << log_prior(count_wl, label.second) << endl;
+    }
   }
-  return words;
 }
+
+
 
 int main(int argc, char *argv[]) {
   cout.precision(3);
