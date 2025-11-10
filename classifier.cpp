@@ -35,6 +35,13 @@ double log_prior(int label_count, int total_count) {
   return log(static_cast<double>(label_count) / static_cast<double>(total_count));
 }
 void Classifier::train(csvstream &training_file) {
+  train_num = 0;
+  vocab_size = 0;
+  vocab.clear();
+  label_count.clear();
+  word_count.clear();
+  word_label_count.clear();
+
   map <string, string> row;
 
   cout << "training data:" << endl;
