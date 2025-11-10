@@ -12,7 +12,7 @@ class Classifier {
     int train_num;
     int vocab_size;
 
-    set<string> content;
+    set<string> vocab;
     map<string, int> label_count;
     map<string, int> word_count;
     map<string, map<string, int>> word_label_count;
@@ -24,11 +24,6 @@ class Classifier {
 };
 
 void Classifier::train(csvstream &training_file) {
-  int post_num;
-  int content_size;
-  label_count;
-  word_count;
-  word_label_count;
   map <string, string> row;
 
   cout << "training data:" << endl;
@@ -40,18 +35,32 @@ void Classifier::train(csvstream &training_file) {
     string content = row["content"];
     cout << "label = " << tag << ", content = " << content << endl;
 
-    ++post_num;
+    ++train_num;
     ++label_count[tag];
     for(const string &word : unique_words(content)) {
-      
+      ++vocab_size;
+      ++word_count[word];
+      ++word_label_count[tag][word];
+      vocab.insert(word);
     }
   }
+
+  cout << "trained on " << train_num << " examples" << endl;
+  cout << "vocabulary size = " << vocab_size << endl;
+  cout << endl;
+
+
 }
 
+double calculate_log_prior(int label_count, int train_num) {
+  double log_prior = std::log(label_count / train_num);
+  return log_prior;
 
+}
 
-double calculate_log_probability() {
-    
+double calculate_log_likelihood(int label_count, int word_count, 
+                                int word_label_count, int train_num) {
+
 }
 
 set<string> unique_words(const string &str) {
